@@ -21,36 +21,43 @@ HunterGate(
 )
 
 # TODO: rename project and delete this comment
-project(template VERSION 0.1.0)
+project(finance_analyzer VERSION 0.1.0)
 string(APPEND CMAKE_CXX_FLAGS " -pedantic -Werror -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-command-line-argument")
 string(APPEND CMAKE_CXX_FLAGS " -Wshadow -Wnon-virtual-dtor")
 
 hunter_add_package(GTest)
+hunter_add_package(Boost COMPONENTS filesystem)
+find_package(Boost CONFIG REQUIRED filesystem)
 find_package(GTest CONFIG REQUIRED)
 
-add_library(${PROJECT_NAME} STATIC
+add_library(boost STATIC
   # enum your files and delete this comment
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/source.cpp
-)
+        sources/DirectoryAnaliz.cpp
+        include/DirectoryAnaliz.hpp)
+
+target_link_libraries(boost Boost::filesystem)
 
 add_executable(demo
   ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
-)
+        sources/DirectoryAnaliz.cpp
+        include/DirectoryAnaliz.hpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+
+target_include_directories(boost PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
 )
 
-target_link_libraries(demo ${PROJECT_NAME})
+target_link_libraries(demo boost
+        Boost::filesystem)
 
 if(BUILD_TESTS)
   add_executable(tests
     # TODO: enum your files and delete this comment
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
   )
-  target_link_libraries(tests ${PROJECT_NAME} GTest::gtest_main)
+  target_link_libraries(tests boost GTest::gtest_main)
   enable_testing()
   add_test(NAME unit_tests COMMAND tests)
 endif()
@@ -59,7 +66,7 @@ if(BUILD_COVERAGE)
   set(ENABLE_COVERAGE ON CACHE BOOL "Enable coverage build." FORCE)
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/coverage/cmake")
   find_package(codecov)
-  add_coverage(${PROJECT_NAME})
+  add_coverage(boost)
   add_coverage(tests)
   coverage_evaluate()
 endif()
@@ -77,8 +84,8 @@ endif()
 
 include(CPackConfig.cmake)
 
-install(TARGETS ${PROJECT_NAME} demo
-  EXPORT "${PROJECT_NAME}-targets"
+install(TARGETS boost demo
+  EXPORT "boost-targets"
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -87,7 +94,7 @@ install(TARGETS ${PROJECT_NAME} demo
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
 
-install(EXPORT "${PROJECT_NAME}-targets"
-  NAMESPACE "${PROJECT_NAME}::"
+install(EXPORT "boost-targets"
+  NAMESPACE "boost::"
   DESTINATION "lib/cmake"
 )
